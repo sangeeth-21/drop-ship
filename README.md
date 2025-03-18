@@ -1,69 +1,126 @@
-# Welcome to your Lovable project
+# 🚀 React + Vue + TSX Project
 
-## Project info
+## 📌 Project Overview
+This project is built using **React**, **Vue**, and **TypeScript (TSX)**, deployed on **Cloudflare**, and uses **Supabase** as the database backend.
 
-**URL**: https://lovable.dev/projects/1feba0a3-6f0d-476d-a4b1-d465fb033e1f
+### 🌐 Live URL
+[Project URL](https://your-project-url.com)
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## 🛠️ Technologies Used
 
-**Use Lovable**
+### Frontend:
+- ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB) **React** (Component-based UI)
+- ![Vue](https://img.shields.io/badge/Vue-4FC08D?style=for-the-badge&logo=vue.js&logoColor=white) **Vue 3** (Reactive UI components)
+- ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white) **TypeScript (TSX)** (Strongly typed components)
+- ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white) **Tailwind CSS** (Utility-first styling)
+- ![ShadCN UI](https://img.shields.io/badge/ShadCN_UI-FB923C?style=for-the-badge&logo=shadcn-ui&logoColor=black) **ShadCN UI** (Pre-built UI components)
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/1feba0a3-6f0d-476d-a4b1-d465fb033e1f) and start prompting.
+### Backend:
+- ![Cloudflare](https://img.shields.io/badge/Cloudflare-F38020?style=for-the-badge&logo=cloudflare&logoColor=white) **Cloudflare Workers** (Serverless API functions)
+- ![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white) **Supabase** (PostgreSQL DB & Auth)
 
-Changes made via Lovable will be committed automatically to this repo.
+### Deployment & DevOps:
+- ![Cloudflare Wrangler](https://img.shields.io/badge/Wrangler-000000?style=for-the-badge&logo=cloudflare&logoColor=orange) **Wrangler** (Cloudflare deployment tool)
+- ![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white) **GitHub Actions** (CI/CD automation)
 
-**Use your preferred IDE**
+---
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## 🔧 Setting Up the Project
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
+### 1️⃣ Clone the Repository
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
 git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
 cd <YOUR_PROJECT_NAME>
+```
 
-# Step 3: Install the necessary dependencies.
-npm i
+### 2️⃣ Install Dependencies
+```sh
+npm install
+```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+### 3️⃣ Run Development Server
+```sh
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+---
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 📡 Deploying to Cloudflare with Wrangler
 
-**Use GitHub Codespaces**
+### 1️⃣ Install Wrangler CLI
+```sh
+npm install -g wrangler
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### 2️⃣ Authenticate Cloudflare
+```sh
+wrangler login
+```
 
-## What technologies are used for this project?
+### 3️⃣ Publish the API
+```sh
+wrangler publish
+```
 
-This project is built with .
+---
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## 📦 Supabase Integration
+This project uses **Supabase as a database backend** with the following API functions:
 
-## How can I deploy this project?
+### 📥 Uploading an Image (Example API Endpoint)
+```ts
+app.post("/upload", async (c) => {
+  const supabase = getSupabaseClient();
+  const formData = await c.req.formData();
+  const file = formData.get("file") as File;
+  if (!file) return c.json({ error: "No file provided" }, 400);
 
-Simply open [Lovable](https://lovable.dev/projects/1feba0a3-6f0d-476d-a4b1-d465fb033e1f) and click on Share -> Publish.
+  const fileName = `${Date.now()}-${file.name}`;
+  const { data, error } = await supabase.storage.from("uploads").upload(fileName, file);
+  if (error) return c.json({ error: error.message }, 500);
 
-## I want to use a custom domain - is that possible?
+  const publicUrl = supabase.storage.from("uploads").getPublicUrl(fileName);
+  return c.json({ url: publicUrl });
+});
+```
 
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+### 🗂️ Database Table: `comments`
+```sql
+
+## 🚀 Deploying the Project
+
+### 1️⃣ Deploy API to Cloudflare
+```sh
+wrangler deploy
+```
+
+### 2️⃣ Deploy Frontend to Cloudflare Pages
+```sh
+git push origin main
+```
+
+### 3️⃣ View Live Project
+After deployment, your project will be accessible at:
+```
+https://your-cloudflare-page-url.com
+```
+
+---
+
+## 🎯 Features
+✅ React + Vue hybrid frontend
+✅ TypeScript with TSX
+✅ Tailwind CSS for styling
+✅ Cloudflare Workers for API
+✅ Supabase for DB and storage
+✅ Commenting system
+✅ Secure authentication
+✅ GitHub Actions for CI/CD
+
+---
+
+## 💡 Want to Contribute?
+Feel free to fork the repo and submit a PR! 🚀
+
