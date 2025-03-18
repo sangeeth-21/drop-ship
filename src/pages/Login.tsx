@@ -1,11 +1,11 @@
 
 import { useState } from "react";
-import { Link, useNavigate, useLocation, Navigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
-import { ArrowLeft, Box, Eye, EyeOff, LogIn } from "lucide-react";
+import { ArrowLeft, Box, Check, Eye, EyeOff, LogIn } from "lucide-react";
 import { toast } from "sonner";
 import { LogisticsAnimation } from "@/components/LogisticsAnimation";
 import { useAuth } from "@/contexts/AuthContext";

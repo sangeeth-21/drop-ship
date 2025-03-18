@@ -7,6 +7,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   userRole: UserRole;
   login: (email: string, password: string) => Promise<boolean>;
+  signup: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
 }
 
@@ -47,6 +48,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return false;
   };
 
+  const signup = async (email: string, password: string): Promise<boolean> => {
+    // In a real app, you would create a new user here
+    // For this demo, we'll just simulate a successful signup
+    localStorage.setItem('userEmail', email);
+    return true;
+  };
+
   const logout = () => {
     setIsAuthenticated(false);
     setUserRole(null);
@@ -54,7 +62,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, userRole, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, userRole, login, signup, logout }}>
       {children}
     </AuthContext.Provider>
   );

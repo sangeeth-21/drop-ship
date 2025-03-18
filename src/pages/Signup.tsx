@@ -1,53 +1,68 @@
 
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
-import { ArrowLeft, Box, Check, Eye, EyeOff, LogIn } from "lucide-react";
+import { ArrowLeft, Box, Eye, EyeOff, LogIn } from "lucide-react";
 import { toast } from "sonner";
 import { LogisticsAnimation } from "@/components/LogisticsAnimation";
 import { useAuth } from "@/contexts/AuthContext";
+import { Icons } from "@/components/icons";
 
 const Signup = () => {
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const location = useLocation();
+  const { signup } = useAuth();
 
-  const handleSignup = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
-    if (!agreeToTerms) {
-      toast.error("You must agree to the Terms of Service and Privacy Policy.");
+    // Validate input
+    if (!email || !password || !confirmPassword) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+    
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match");
       return;
     }
     
     setLoading(true);
     
-    // Since we're using hardcoded credentials for now, we'll just show a message
-    // that the user can only use the predefined credentials
-    setTimeout(() => {
+    try {
+      const success = await signup(email, password);
+      
+      if (success) {
+        toast.success("Signup successful!");
+        // Redirect to user form
+        navigate("/user-form");
+      } else {
+        toast.error("Failed to create account");
+      }
+    } catch (error) {
+      toast.error("An error occurred during signup");
+      console.error(error);
+    } finally {
       setLoading(false);
-      toast.info("For demo purposes, please use predefined credentials: user@example.com / user123");
-      navigate("/auth");
-    }, 1500);
+    }
   };
 
   const handleGoogleSignup = () => {
     setLoading(true);
     
-    // Simulate Google signup process with redirect to login
+    // Simulate Google signup process
     setTimeout(() => {
       setLoading(false);
-      toast.info("For demo purposes, please use predefined credentials: user@example.com / user123");
-      navigate("/auth");
+      toast.success("Google signup successful!");
+      navigate("/user-form");
     }, 1500);
   };
 
@@ -84,20 +99,7 @@ const Signup = () => {
             </div>
             
             <div className="space-y-6">
-              <form onSubmit={handleSignup} className="space-y-4 animate-slide-up">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
-                  <Input
-                    id="name"
-                    type="text"
-                    placeholder="Enter your full name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="h-12"
-                    required
-                  />
-                </div>
-                
+              <form onSubmit={handleSubmit} className="space-y-4 animate-slide-up">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input
@@ -117,7 +119,7 @@ const Signup = () => {
                     <Input
                       id="password"
                       type={showPassword ? "text" : "password"}
-                      placeholder="Create a password"
+                      placeholder="Enter your password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       className="h-12 pr-10"
@@ -137,20 +139,21 @@ const Signup = () => {
                       )}
                     </Button>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Must be at least 8 characters long.
-                  </p>
                 </div>
                 
-                <div className="flex items-start space-x-2 pt-2">
-                  <Checkbox 
-                    id="terms" 
-                    checked={agreeToTerms}
-                    onCheckedChange={(checked) => setAgreeToTerms(checked as boolean)}
-                  />
-                  <Label htmlFor="terms" className="text-sm font-normal">
-                    I agree to the <Link to="#" className="text-primary hover:underline">Terms of Service</Link> and <Link to="#" className="text-primary hover:underline">Privacy Policy</Link>
-                  </Label>
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="confirmPassword"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Confirm your password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="h-12 pr-10"
+                      required
+                    />
+                  </div>
                 </div>
                 
                 <Button type="submit" disabled={loading} className="w-full h-12 bg-primary hover:bg-primary/90 transition-all">
@@ -160,7 +163,7 @@ const Signup = () => {
                       <span>Creating account...</span>
                     </div>
                   ) : (
-                    "Create Account"
+                    "Create account"
                   )}
                 </Button>
               </form>
@@ -187,6 +190,24 @@ const Signup = () => {
                   Sign in
                 </Link>
               </div>
+              
+              <p className="px-8 text-center text-xs text-muted-foreground animate-fade-in">
+                By creating an account, you agree to our{" "}
+                <Link
+                  to="/terms"
+                  className="underline underline-offset-2 hover:text-primary"
+                >
+                  Terms of Service
+                </Link>{" "}
+                and{" "}
+                <Link
+                  to="/privacy"
+                  className="underline underline-offset-2 hover:text-primary"
+                >
+                  Privacy Policy
+                </Link>
+                .
+              </p>
             </div>
           </div>
         </div>

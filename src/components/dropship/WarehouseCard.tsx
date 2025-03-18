@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,8 +6,6 @@ import { toast } from "@/components/ui/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/AuthContext";
-
 interface WarehouseCardProps {
   id: string;
   name: string;
@@ -26,7 +23,6 @@ interface WarehouseCardProps {
   onEdit?: () => void;
   onDelete?: () => void;
 }
-
 const WarehouseCard = ({
   id,
   name,
@@ -44,9 +40,6 @@ const WarehouseCard = ({
   onEdit,
   onDelete
 }: WarehouseCardProps) => {
-  const { userRole } = useAuth();
-  const isAdmin = userRole === 'admin';
-  
   const copyToClipboard = (text: string, fieldName: string) => {
     navigator.clipboard.writeText(text).then(() => {
       toast({
@@ -63,7 +56,6 @@ const WarehouseCard = ({
       });
     });
   };
-  
   const renderField = (icon: React.ReactNode, label: string, value: string) => <div className="flex items-start p-4 gap-3 group">
       {icon}
       <div className="flex-1">
@@ -85,7 +77,6 @@ const WarehouseCard = ({
         </div>
       </div>
     </div>;
-    
   return <Card className="hover:shadow-lg transition-shadow overflow-hidden">
       <div className="flex justify-between items-center bg-primary/10 p-4 border-b">
         <div className="flex items-center gap-2">
@@ -95,20 +86,13 @@ const WarehouseCard = ({
           <h3 className="text-lg font-semibold">{name}</h3>
         </div>
         <div className="flex gap-2">
-          {isAdmin && (
-            <Link to={`/admin/warehouse/${id}`}>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <Pencil className="h-4 w-4 text-primary" />
-                <span className="sr-only">Edit warehouse</span>
-              </Button>
-            </Link>
-          )}
-          {isAdmin && onDelete && (
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onDelete}>
+          <Link to={`/admin/warehouse/${id}`}>
+            
+          </Link>
+          {onDelete && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onDelete}>
               <Trash2 className="h-4 w-4 text-destructive" />
               <span className="sr-only">Delete warehouse</span>
-            </Button>
-          )}
+            </Button>}
         </div>
       </div>
       <CardContent className="p-0">
@@ -125,5 +109,4 @@ const WarehouseCard = ({
       </CardContent>
     </Card>;
 };
-
 export default WarehouseCard;

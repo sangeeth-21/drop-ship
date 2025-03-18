@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { 
   Package, 
@@ -9,10 +10,7 @@ import {
   Box, 
   CreditCard, 
   X,
-  Check,
-  Copy,
-  CreditCard as PaymentIcon,
-  IndianRupee
+  Check
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -28,20 +26,6 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { toast } from "sonner";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-
-// Define Razorpay for TypeScript
-declare global {
-  interface Window {
-    Razorpay: any;
-  }
-}
 
 const NewOrderPage = () => {
   const [activeTab, setActiveTab] = useState("receiver");
@@ -49,10 +33,6 @@ const NewOrderPage = () => {
   const [activeShipment, setActiveShipment] = useState(1);
   const [orderTotal, setOrderTotal] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState("bank-transfer");
-  const [showBankDetails, setShowBankDetails] = useState(false);
-  const [showDepositDetails, setShowDepositDetails] = useState(false);
-  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
-  const [orderNumber, setOrderNumber] = useState("");
 
   // Form data state
   const [formData, setFormData] = useState({
@@ -79,31 +59,6 @@ const NewOrderPage = () => {
     height: ""
   });
 
-  useEffect(() => {
-    // Update bank details visibility based on selected payment method
-    setShowBankDetails(paymentMethod === "bank-transfer");
-    setShowDepositDetails(paymentMethod === "bank-deposit");
-  }, [paymentMethod]);
-
-  const toggleBodyScrolling = (disable: boolean) => {
-    if (disable) {
-      // Save the current scroll position
-      const scrollY = window.scrollY;
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = '100%';
-      document.body.style.overflowY = 'scroll';
-    } else {
-      // Restore the scroll position
-      const scrollY = document.body.style.top;
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      document.body.style.overflowY = '';
-      window.scrollTo(0, parseInt(scrollY || '0') * -1);
-    }
-  };
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -129,93 +84,13 @@ const NewOrderPage = () => {
     }
   };
 
-  const generateOrderNumber = () => {
-    const prefix = "ORD";
-    const timestamp = Date.now().toString().slice(-6);
-    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-    return `${prefix}-${timestamp}-${random}`;
-  };
-
-  const initRazorpay = () => {
-    // Calculate order amount
-    const total = formData.value ? parseFloat(formData.value) : 0;
-    setOrderTotal(total);
-    
-    // Disable scrolling when Razorpay is opened
-    toggleBodyScrolling(true);
-    
-    const options = {
-      key: "rzp_test_yourtestkey", // Replace with your test key
-      amount: total * 100, // Amount in smallest currency unit (e.g., paise for INR)
-      currency: "INR",
-      name: "Drop & Ship",
-      description: "Payment for shipping order",
-      image: "https://example.com/your_logo.png",
-      handler: function(response: any) {
-        // Re-enable scrolling after payment is complete
-        toggleBodyScrolling(false);
-        
-        const generatedOrderNumber = generateOrderNumber();
-        setOrderNumber(generatedOrderNumber);
-        setShowSuccessDialog(true);
-      },
-      modal: {
-        ondismiss: function() {
-          // Re-enable scrolling if the modal is dismissed
-          toggleBodyScrolling(false);
-        }
-      },
-      prefill: {
-        name: `${formData.firstName} ${formData.lastName}`,
-        email: formData.email,
-        contact: formData.phone
-      },
-      theme: {
-        color: "#3399cc"
-      }
-    };
-
-    try {
-      const razorpayInstance = new window.Razorpay(options);
-      razorpayInstance.open();
-    } catch (error) {
-      // Re-enable scrolling in case of error
-      toggleBodyScrolling(false);
-      
-      console.error("Razorpay initialization failed:", error);
-      toast.error("Payment gateway initialization failed. Please try again.");
-    }
-  };
-
   const handlePlaceOrder = () => {
-    if (paymentMethod === "online") {
-      // Load Razorpay script if not already loaded
-      if (!window.Razorpay) {
-        const script = document.createElement("script");
-        script.src = "https://checkout.razorpay.com/v1/checkout.js";
-        script.async = true;
-        script.onload = () => {
-          initRazorpay();
-        };
-        document.body.appendChild(script);
-      } else {
-        initRazorpay();
-      }
-    } else {
-      // For other payment methods, just show success
-      const generatedOrderNumber = generateOrderNumber();
-      setOrderNumber(generatedOrderNumber);
-      setShowSuccessDialog(true);
-    }
+    toast.success("Order placed successfully!");
+    // Redirect or other actions after order placement
   };
 
   const handleSectionNavigation = (section: string) => {
     setActiveTab(section);
-  };
-
-  const copyBankDetails = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success("Bank details copied to clipboard");
   };
 
   return (
@@ -716,26 +591,8 @@ const NewOrderPage = () => {
                     >
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="online" id="online" />
-                        <Label htmlFor="online" className="flex items-center gap-2">
-                          <span>Online Payment</span>
-                        </Label>
+                        <Label htmlFor="online">Online</Label>
                       </div>
-
-                      {paymentMethod === "online" && (
-                        <div className="ml-7 p-3 bg-muted/50 rounded-md">
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="online" id="razorpay" checked />
-                            <Label htmlFor="razorpay" className="flex items-center gap-2">
-                              <span>Razorpay</span>
-                              <div className="flex items-center gap-1">
-                                <IndianRupee className="h-4 w-4 text-blue-600" />
-                                <span className="text-blue-600 font-semibold">Pay</span>
-                              </div>
-                            </Label>
-                          </div>
-                        </div>
-                      )}
-                      
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="bank-transfer" id="bank-transfer" />
                         <Label htmlFor="bank-transfer">Bank Transfer</Label>
@@ -750,154 +607,10 @@ const NewOrderPage = () => {
                       </div>
                     </RadioGroup>
 
-                    {/* Bank Transfer Details */}
-                    {showBankDetails && (
-                      <div className="mt-4 p-4 border rounded-md bg-muted/50">
-                        <h4 className="font-medium mb-2">Bank Account Details</h4>
-                        <div className="space-y-2">
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Account Name:</span>
-                            <div className="flex items-center gap-1">
-                              <span>Drop & Ship Ltd</span>
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-5 w-5"
-                                onClick={() => copyBankDetails("Drop & Ship Ltd")}
-                              >
-                                <Copy className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Account Number:</span>
-                            <div className="flex items-center gap-1">
-                              <span>12345678901234</span>
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-5 w-5"
-                                onClick={() => copyBankDetails("12345678901234")}
-                              >
-                                <Copy className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Bank Name:</span>
-                            <div className="flex items-center gap-1">
-                              <span>International Bank</span>
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-5 w-5"
-                                onClick={() => copyBankDetails("International Bank")}
-                              >
-                                <Copy className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Branch:</span>
-                            <div className="flex items-center gap-1">
-                              <span>Main Branch</span>
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-5 w-5"
-                                onClick={() => copyBankDetails("Main Branch")}
-                              >
-                                <Copy className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">SWIFT/BIC:</span>
-                            <div className="flex items-center gap-1">
-                              <span>INTLBANK123</span>
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-5 w-5"
-                                onClick={() => copyBankDetails("INTLBANK123")}
-                              >
-                                <Copy className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Bank Deposit Details */}
-                    {showDepositDetails && (
-                      <div className="mt-4 p-4 border rounded-md bg-muted/50">
-                        <h4 className="font-medium mb-2">Deposit Account Details</h4>
-                        <div className="space-y-2">
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Account Name:</span>
-                            <div className="flex items-center gap-1">
-                              <span>Drop & Ship Deposits</span>
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-5 w-5"
-                                onClick={() => copyBankDetails("Drop & Ship Deposits")}
-                              >
-                                <Copy className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Account Number:</span>
-                            <div className="flex items-center gap-1">
-                              <span>98765432109876</span>
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-5 w-5"
-                                onClick={() => copyBankDetails("98765432109876")}
-                              >
-                                <Copy className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Bank Name:</span>
-                            <div className="flex items-center gap-1">
-                              <span>Local National Bank</span>
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-5 w-5"
-                                onClick={() => copyBankDetails("Local National Bank")}
-                              >
-                                <Copy className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Branch:</span>
-                            <div className="flex items-center gap-1">
-                              <span>City Center Branch</span>
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-5 w-5"
-                                onClick={() => copyBankDetails("City Center Branch")}
-                              >
-                                <Copy className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
                     <div className="flex justify-center mt-8">
                       <Button 
                         className="w-full md:w-auto px-8 py-6 text-base"
-                        onClick={handlePlaceOrder}
+                        onClick={() => handleSectionNavigation("done")}
                       >
                         <Check className="h-5 w-5 mr-2" />
                         Done
@@ -919,7 +632,7 @@ const NewOrderPage = () => {
                       <div className="bg-muted p-3 rounded-lg flex items-center justify-between">
                         <span>Shipment {activeShipment}</span>
                         <span className="bg-green-500 text-white px-3 py-1 rounded-full text-xs">
-                          LKR {formData.value || 0}
+                          LKR 0
                         </span>
                       </div>
                       
@@ -942,7 +655,7 @@ const NewOrderPage = () => {
                       <div className="border-t pt-4 mt-4">
                         <div className="flex justify-between items-center font-semibold">
                           <span>Order Total:</span>
-                          <span>LKR {formData.value || "0"}</span>
+                          <span>LKR {orderTotal.toFixed(2)}</span>
                         </div>
                       </div>
                       
@@ -961,44 +674,6 @@ const NewOrderPage = () => {
           </div>
         </div>
       </main>
-
-      {/* Order Success Dialog */}
-      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center justify-center gap-2 text-xl">
-              <div className="bg-green-100 dark:bg-green-900/30 p-2 rounded-full">
-                <Check className="h-6 w-6 text-green-600 dark:text-green-400" />
-              </div>
-              Order Placed Successfully
-            </DialogTitle>
-            <DialogDescription className="text-center pt-2">
-              Your order has been placed successfully
-            </DialogDescription>
-          </DialogHeader>
-          <div className="p-6 space-y-4">
-            <div className="bg-muted p-4 rounded-lg">
-              <div className="flex justify-between mb-2">
-                <span className="text-muted-foreground">Order Number:</span>
-                <span className="font-medium">{orderNumber}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Total Amount:</span>
-                <span className="font-medium">LKR {formData.value || "0"}</span>
-              </div>
-            </div>
-            
-            <div className="flex justify-between">
-              <Button variant="outline" asChild>
-                <Link to="/dashboard/orders">View Orders</Link>
-              </Button>
-              <Button onClick={() => setShowSuccessDialog(false)}>
-                Close
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
