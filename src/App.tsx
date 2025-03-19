@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -15,6 +14,7 @@ import Login from "./pages/Login";
 import Auth from "./pages/Auth";
 import Signup from "./pages/Signup";
 import UserForm from "./pages/UserForm";
+import WaitForApproval from "./pages/WaitforApproval";
 import StorePage from "./pages/dashboard/StorePage";
 import OrdersPage from "./pages/dashboard/OrdersPage";
 import DropShipPage from "./pages/dashboard/DropShipPage";
@@ -95,6 +95,14 @@ function App() {
                     element={
                       <PageTransition>
                         <UserForm />
+                      </PageTransition>
+                    }
+                  />
+                  <Route
+                    path="/wait-for-approval"
+                    element={
+                      <PageTransition>
+                        <WaitForApproval />
                       </PageTransition>
                     }
                   />

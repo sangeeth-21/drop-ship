@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -16,6 +15,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import Cookies from "js-cookie";
+import { jwtDecode } from "jwt-decode";
 
 const UserForm = () => {
   const navigate = useNavigate();
@@ -30,8 +31,8 @@ const UserForm = () => {
   const [postalCode, setPostalCode] = useState("");
   const [country, setCountry] = useState("India");
   const [poiType, setPoiType] = useState("");
-  const [frontCopy, setFrontCopy] = useState<File | null>(null);
-  const [backCopy, setBackCopy] = useState<File | null>(null);
+  const [frontFile, setFrontFile] = useState<File | null>(null);
+  const [backFile, setBackFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
 
@@ -48,10 +49,49 @@ const UserForm = () => {
     }, 1500);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleFileChange = (type: 'front' | 'back', e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      if (type === 'front') {
+        setFrontFile(file);
+        toast.success("Front file selected");
+      } else {
+        setBackFile(file);
+        toast.success("Back file selected");
+      }
+    }
+  };
+
+  const uploadImages = async (): Promise<{ frontUrl: string; backUrl: string }> => {
+    const token = Cookies.get("jwt_token");
+    if (!token) {
+      throw new Error("No token found");
+    }
+
+    const formData = new FormData();
+    if (frontFile) formData.append("file1", frontFile);
+    if (backFile) formData.append("file2", backFile);
+
+    const response = await fetch("https://drop.ksangeeth76.workers.dev/upload/uploadpoi", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to upload images");
+    }
+
+    const data = await response.json();
+    return { frontUrl: data.urls[0], backUrl: data.urls[1] };
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    
+
     if (!firstName || !lastName || !phoneNumber || !addressLine1 || !postalCode || !country || !poiType) {
       toast.error("Please fill in all required fields");
       setLoading(false);
@@ -64,28 +104,63 @@ const UserForm = () => {
       return;
     }
 
-    if (!frontCopy || !backCopy) {
+    if (!frontFile || !backFile) {
       toast.error("Please upload proof of identification");
       setLoading(false);
       return;
     }
-    
-    setTimeout(() => {
-      setLoading(false);
-      toast.success("User details saved successfully!");
-      navigate("/dashboard/store");
-    }, 1500);
-  };
 
-  const handleFileChange = (type: 'front' | 'back', e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      if (type === 'front') {
-        setFrontCopy(e.target.files[0]);
-        toast.success("Front copy uploaded successfully");
-      } else {
-        setBackCopy(e.target.files[0]);
-        toast.success("Back copy uploaded successfully");
+    try {
+      // Upload images and get URLs
+      const { frontUrl, backUrl } = await uploadImages();
+
+      // Get the JWT token from cookies
+      const token = Cookies.get("jwt_token");
+      if (!token) {
+        throw new Error("No token found");
       }
+
+      // Decode the token to get the UID
+      const decodedToken: { uid: string } = jwtDecode(token);
+      const uid = decodedToken.uid;
+
+      // Prepare the request body
+      const requestBody = {
+        firstname: firstName,
+        lastname: lastName,
+        phonenumber: phoneNumber,
+        addresslane1: addressLine1,
+        addresslane2: addressLine2,
+        addresslane3: addressLine3,
+        addresslane4: addressLine4,
+        postalcode: postalCode,
+        country: country,
+        state: "", // Add state if required
+        frontcopy: frontUrl,
+        backcopy: backUrl,
+      };
+
+      // Send the request to update user profile
+      const response = await fetch(`https://drop.ksangeeth76.workers.dev/userupdate/${uid}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update user profile");
+      }
+
+      toast.success("User profile updated successfully!");
+      navigate("/dashboard/store");
+    } catch (error) {
+      toast.error("An error occurred while updating the profile");
+      console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 

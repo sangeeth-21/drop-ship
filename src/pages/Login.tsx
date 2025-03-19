@@ -1,14 +1,14 @@
-
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
-import { ArrowLeft, Box, Check, Eye, EyeOff, LogIn } from "lucide-react";
+import { ArrowLeft, Box, Eye, EyeOff, LogIn } from "lucide-react";
 import { toast } from "sonner";
 import { LogisticsAnimation } from "@/components/LogisticsAnimation";
-import { useAuth } from "@/contexts/AuthContext";
+import Cookies from "js-cookie"; // For handling cookies
+import { jwtDecode } from "jwt-decode"; // For decoding JWT tokens
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -17,7 +17,6 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { login } = useAuth();
 
   // Check if there's a redirect path in the location state
   const from = location.state?.from?.pathname || "/dashboard/store";
@@ -25,22 +24,63 @@ const Login = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    
+
     try {
-      const success = await login();
-      
-      if (success) {
-        const redirectPath = email === 'admin@example.com' 
-          ? '/admin/dashboard' 
-          : '/dashboard/store';
-        
-        toast.success("Login successful!");
-        navigate(redirectPath);
-      } else {
-        toast.error("Invalid credentials. Please try again.");
+      // Make API call to login
+      const response = await fetch("https://drop.ksangeeth76.workers.dev/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Login failed");
       }
+
+      const data = await response.json();
+      const { token } = data;
+
+      // Decode the JWT token
+      const decodedToken: {
+        uid: string;
+        role: string;
+        status: string;
+        poistatus: string;
+        iat: number;
+        exp: number;
+      } = jwtDecode(token);
+
+      // Log the decoded token
+      console.log("Decoded Token:", decodedToken);
+
+      // Save uid and poistatus in cookies
+      Cookies.set("uid", decodedToken.uid, { expires: 1 }); // Expires in 1 day
+      Cookies.set("poistatus", decodedToken.poistatus, { expires: 1 });
+
+      // Redirect based on role
+      if (decodedToken.role === "admin") {
+        navigate("/admin/dashboard"); // Redirect admin to admin dashboard
+      } else {
+        // Redirect non-admin users based on poistatus
+        if (decodedToken.poistatus === "pending") {
+          navigate("/userform");
+        } else if (decodedToken.poistatus === "uploaded") {
+          navigate("/wait-for-approval");
+        } else if (decodedToken.poistatus === "success") {
+          navigate("/dashboard/store");
+        } else {
+          throw new Error("Unknown poistatus");
+        }
+      }
+
+      toast.success("Login successful!");
     } catch (error) {
-      toast.error("An error occurred during login.");
+      toast.error("Invalid credentials. Please try again.");
       console.error(error);
     } finally {
       setLoading(false);
@@ -49,7 +89,7 @@ const Login = () => {
 
   const handleGoogleLogin = () => {
     setLoading(true);
-    
+
     // Simulate Google login process
     setTimeout(() => {
       setLoading(false);
@@ -67,18 +107,18 @@ const Login = () => {
           </Button>
         </Link>
       </div>
-      
+
       <div className="fixed top-4 right-4 z-50">
         <ThemeToggle />
       </div>
-      
+
       <div className="flex-1 flex lg:flex-row flex-col items-stretch">
         <div className="lg:w-1/2 hidden lg:block bg-gradient-to-br from-purple-600/10 to-purple-800/20 relative overflow-hidden">
           <div className="absolute inset-0">
             <LogisticsAnimation />
           </div>
         </div>
-        
+
         <div className="lg:w-1/2 w-full flex items-center justify-center p-4">
           <div className="w-full max-w-md mx-auto animate-scale-in">
             <div className="text-center mb-8 animate-fade-in">
@@ -89,7 +129,7 @@ const Login = () => {
               <h1 className="text-3xl font-bold tracking-tighter mb-2">Welcome back</h1>
               <p className="text-muted-foreground">Sign in to your account to continue</p>
             </div>
-            
+
             <div className="space-y-6">
               <form onSubmit={handleLogin} className="space-y-4 animate-slide-up">
                 <div className="space-y-2">
@@ -104,7 +144,7 @@ const Login = () => {
                     required
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="password">Password</Label>
@@ -137,7 +177,7 @@ const Login = () => {
                     </Button>
                   </div>
                 </div>
-                
+
                 <Button type="submit" disabled={loading} className="w-full h-12 bg-primary hover:bg-primary/90 transition-all">
                   {loading ? (
                     <div className="flex items-center gap-2">
@@ -149,23 +189,23 @@ const Login = () => {
                   )}
                 </Button>
               </form>
-              
+
               <div className="relative flex items-center animate-fade-in">
                 <div className="flex-grow border-t border-border"></div>
                 <span className="mx-4 text-xs text-muted-foreground">OR</span>
                 <div className="flex-grow border-t border-border"></div>
               </div>
-              
-              <Button 
-                onClick={handleGoogleLogin} 
-                disabled={loading} 
-                variant="outline" 
+
+              <Button
+                onClick={handleGoogleLogin}
+                disabled={loading}
+                variant="outline"
                 className="w-full relative bg-card h-12 animate-slide-up"
               >
                 <LogIn className="h-5 w-5 mr-2" />
                 Continue with Google
               </Button>
-              
+
               <div className="text-center text-sm animate-fade-in">
                 <span className="text-muted-foreground">Don't have an account?</span>{" "}
                 <Link to="/signup" className="text-primary hover:underline font-medium">

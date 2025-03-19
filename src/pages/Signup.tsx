@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,7 @@ import { ArrowLeft, Box, Eye, EyeOff, LogIn } from "lucide-react";
 import { toast } from "sonner";
 import { LogisticsAnimation } from "@/components/LogisticsAnimation";
 import { useAuth } from "@/contexts/AuthContext";
+import Cookies from "js-cookie";
 
 const Signup = () => {
   const [name, setName] = useState("");
@@ -32,10 +32,28 @@ const Signup = () => {
     setLoading(true);
     
     try {
-      // In a real app, you would register the user here
-      // For now, we just simulate success and login
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      const response = await fetch("https://drop.ksangeeth76.workers.dev/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Signup failed");
+      }
+
+      const data = await response.json();
+      const token = data.token; // Assuming the token is returned in the response
+
+      // Save the JWT token as a cookie
+      Cookies.set("jwt_token", token, { expires: 7 }); // Expires in 7 days
+
       toast.success("Account created successfully!");
       navigate("/user-form");
     } catch (error) {
