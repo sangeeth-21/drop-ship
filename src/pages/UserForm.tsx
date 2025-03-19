@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -155,7 +156,7 @@ const UserForm = () => {
                     <Label htmlFor="phoneNumber">Phone Number</Label>
                     <div className="flex items-center gap-2">
                       <div className="flex items-center w-full max-w-[90px] h-12 bg-background border rounded-md text-foreground px-3">
-                        <span>+91</span>
+                        <span>+94</span>
                       </div>
                       
                       <div className="relative flex-1">

@@ -1,68 +1,31 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext } from 'react';
 
-type UserRole = 'admin' | 'user' | null;
-
+// Simple AuthContext that always returns authenticated with admin role
 interface AuthContextType {
   isAuthenticated: boolean;
-  userRole: UserRole;
-  login: (email: string, password: string) => Promise<boolean>;
-  signup: (email: string, password: string) => Promise<boolean>;
+  userRole: 'admin' | 'user';
+  login: () => Promise<boolean>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Hardcoded credentials
-const VALID_CREDENTIALS = {
-  admin: { email: 'admin@example.com', password: 'admin123' },
-  user: { email: 'user@example.com', password: 'user123' },
-};
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [userRole, setUserRole] = useState<UserRole>(null);
+  // Always authenticated with admin role
+  const isAuthenticated = true;
+  const userRole = 'admin';
 
-  // Check for existing session on mount
-  useEffect(() => {
-    const storedRole = localStorage.getItem('userRole');
-    if (storedRole) {
-      setIsAuthenticated(true);
-      setUserRole(storedRole as UserRole);
-    }
-  }, []);
-
-  const login = async (email: string, password: string): Promise<boolean> => {
-    // Check against hardcoded credentials
-    if (email === VALID_CREDENTIALS.admin.email && password === VALID_CREDENTIALS.admin.password) {
-      setIsAuthenticated(true);
-      setUserRole('admin');
-      localStorage.setItem('userRole', 'admin');
-      return true;
-    } else if (email === VALID_CREDENTIALS.user.email && password === VALID_CREDENTIALS.user.password) {
-      setIsAuthenticated(true);
-      setUserRole('user');
-      localStorage.setItem('userRole', 'user');
-      return true;
-    }
-    return false;
-  };
-
-  const signup = async (email: string, password: string): Promise<boolean> => {
-    // In a real app, you would create a new user here
-    // For this demo, we'll just simulate a successful signup
-    localStorage.setItem('userEmail', email);
+  const login = async (): Promise<boolean> => {
     return true;
   };
 
   const logout = () => {
-    setIsAuthenticated(false);
-    setUserRole(null);
-    localStorage.removeItem('userRole');
+    // No-op
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, userRole, login, signup, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, userRole, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

@@ -27,7 +27,7 @@ const Login = () => {
     setLoading(true);
     
     try {
-      const success = await login(email, password);
+      const success = await login();
       
       if (success) {
         const redirectPath = email === 'admin@example.com' 

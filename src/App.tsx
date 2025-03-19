@@ -90,7 +90,6 @@ function App() {
                       </PageTransition>
                     }
                   />
-                  {/* Add the new user form route */}
                   <Route
                     path="/user-form"
                     element={
